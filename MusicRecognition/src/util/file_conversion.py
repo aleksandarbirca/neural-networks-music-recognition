@@ -48,6 +48,7 @@ def convert_wav_to_mfcc():
 
 def extract_cepstrum(path):
     sample_rate, X = scipy.io.wavfile.read(path)
+    X[X == 0] = 1
     ceps, mspec, spec = mfcc(X)
     base_fn, ext = os.path.splitext(path)
     data_fn = base_fn + ".ceps"
