@@ -11,9 +11,6 @@ import os
 from sklearn.preprocessing import scale
 
 class DialogWindow(QtGui.QWidget):
-    config = {}
-#    execfile("..\..\config.cfg", config)
-#    GENRE_LIST = config["GENRE_LIST"]
 
     model = Sequential()
 
@@ -52,6 +49,16 @@ class DialogWindow(QtGui.QWidget):
         model.load_weights('..\data\weights\weights.h5')
 
         Y = model.predict(np.array(X))
+        self.textbox.insertPlainText('Blues: ' + str(Y[0][0]))
+        self.textbox.insertPlainText('\nClassical: ' + str(Y[0][1]))
+        self.textbox.insertPlainText('\nCountry: ' + str(Y[0][2]))
+        self.textbox.insertPlainText('\nDisco: ' + str(Y[0][3]))
+        self.textbox.insertPlainText('\nHipHop: ' + str(Y[0][4]))
+        self.textbox.insertPlainText('\nJazz: ' + str(Y[0][5]))
+        self.textbox.insertPlainText('\nMetal: ' + str(Y[0][6]))
+        self.textbox.insertPlainText('\nPop: ' + str(Y[0][7]))
+        self.textbox.insertPlainText('\nReggae: ' + str(Y[0][8]))
+        self.textbox.insertPlainText('\nRock: ' + str(Y[0][9]))
         print Y
 
 if __name__ == '__main__':
