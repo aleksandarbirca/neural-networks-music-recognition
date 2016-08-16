@@ -17,8 +17,7 @@ GENRE_LIST = config["GENRE_LIST"]
 
 def convert_dataset_to_wav():
     start = timeit.default_timer()
-    rootdir = DATASET_DIR
-    for subdir, dirs, files in os.walk(rootdir):
+    for subdir, dirs, files in os.walk(DATASET_DIR):
         for file in files:
             path = subdir+'/'+file
             if path.endswith("au"):
@@ -27,15 +26,10 @@ def convert_dataset_to_wav():
                 song = song[:30000]
                 song.export(path[:-2]+"wav",format='wav')
 
-    for subdir, dirs, files in os.walk(rootdir):
-        for file in files:
-            path = subdir+'/'+file
-            if not path.endswith("wav"):
-                os.remove(path)
-
     stop = timeit.default_timer()
     print "Files converted successfully."
     print "Conversion time = ", (stop - start)
+
 
 # Mel Frequency Cepstral Coefficients
 def convert_wav_to_mfcc():
@@ -45,7 +39,6 @@ def convert_wav_to_mfcc():
         for file in files:
             path = subdir+'/'+file
             if path.endswith("wav"):
-                # TODO: Check if GENRE_LIST property contains folder name (genre)
                 extract_cepstrum(path) # Mel-frequency cepstrum (https://en.wikipedia.org/wiki/Mel-frequency_cepstrum)
 
     stop = timeit.default_timer()
@@ -55,7 +48,6 @@ def convert_wav_to_mfcc():
 
 def extract_cepstrum(path):
     sample_rate, X = scipy.io.wavfile.read(path)
-    X[X == 0] = 1
     ceps, mspec, spec = mfcc(X)
     base_fn, ext = os.path.splitext(path)
     data_fn = base_fn + ".ceps"

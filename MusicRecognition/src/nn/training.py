@@ -40,7 +40,7 @@ def train_network():
     model.fit(X, Y, nb_epoch=10000, batch_size=128,  validation_data=(X, Y))
     model.save_weights('..\..\data\weights.h5', overwrite=True)
     score = model.evaluate(X, Y)
-    print 'Network trained successfully.'
+    print 'Network trained successfully and network weights saved as file weights.h5.'
     print('Test score:', score[0])
     print('Test accuracy:', score[1])
 
@@ -49,11 +49,11 @@ def read_mfcc():
     X = []
     y = []
     for label, genre in enumerate(GENRE_LIST):
-        for fn in glob.glob(os.path.join(DATASET_DIR, genre, "*.ceps.npy")):
-            print 'Extracting MFCC from ' + fn
-            ceps = np.load(fn)
+        for file in glob.glob(os.path.join(DATASET_DIR, genre, "*.ceps.npy")):
+            print 'Extracting MFCC from ' + file
+            ceps = np.load(file)
             num_ceps = len(ceps)
-            X.append(np.mean(ceps[0:num_ceps], axis=0)) # mean value from 4000+ CEPS samples
+            X.append(np.mean(ceps[0:num_ceps], axis=0))
             g = np.zeros(10)
             g[label.real] = 1
             y.append(g)
