@@ -49,6 +49,7 @@ class DialogWindow(QtGui.QWidget):
         model.load_weights('..\data\weights\weights.h5')
 
         Y = model.predict(np.array(X))
+        self.textbox.clear()
         self.textbox.insertPlainText('Blues: ' + str(Y[0][0]))
         self.textbox.insertPlainText('\nClassical: ' + str(Y[0][1]))
         self.textbox.insertPlainText('\nCountry: ' + str(Y[0][2]))
