@@ -4,7 +4,6 @@ from keras.layers import LSTM, Embedding
 import os
 import glob
 import numpy as np
-from keras.optimizers import SGD
 from sklearn.preprocessing import scale
 
 config = {}
@@ -17,8 +16,8 @@ model = Sequential()
 
 def compile_model():
     # sgd = SGD(lr=0.9, decay=1e-6, momentum=0.8, nesterov=True)
-    model.add(Embedding(100, 100))
-    model.add(LSTM(32, return_sequences=True, input_shape=(300000, 13)))
+    model.add(Embedding(500, 500))
+    model.add(LSTM(64, return_sequences=True, input_shape=(30000, 13)))
     model.add(LSTM(32, return_sequences=True))
     model.add(LSTM(13))
     # model.add(Activation('tanh'))
@@ -39,7 +38,7 @@ def train_network():
     X, Y = read_mfcc()
     print '\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
     print '\nTraining network started\n'
-    X = scale( X, axis=0, with_mean=True, with_std=True, copy=True )
+    X = scale(X, axis=0, with_mean=True, with_std=True, copy=True)
     # Y = scale( Y, axis=0, with_mean=True, with_std=True, copy=True )
     # X = (X - np.min(X)) / (np.max(X) - np.min(X))
     # Y = (Y - np.min(Y)) / (np.max(Y) - np.min(Y))
