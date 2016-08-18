@@ -9,6 +9,7 @@ from pydub import AudioSegment
 from scikits.talkbox.features import mfcc
 import os
 from sklearn.preprocessing import scale
+import matplotlib.pyplot as plt
 
 class DialogWindow(QtGui.QWidget):
 
@@ -61,6 +62,42 @@ class DialogWindow(QtGui.QWidget):
         self.textbox.insertPlainText('\nPop: ' + str(Y[0][7]))
         self.textbox.insertPlainText('\nReggae: ' + str(Y[0][8]))
         self.textbox.insertPlainText('\nRock: ' + str(Y[0][9]))
+        print Y
+        x = [row[0] for row in Y]
+        self.draw_bar(x)
+        
+    def draw_bar(self, x):
+        n_genres = 10
+        index = np.arange(n_genres)
+        bar_width = 0.65
+#        x=[random.uniform(0.1,1) for _ in range (10)]
+        x_round = []
+        fig, ax = plt.subplots()
+        for i in x: 
+            x_round.append(float("{0:.2f}".format(self.loop_func(i))))
+        rec = ax.bar(index, x_round, bar_width, color=[np.random.rand(3,1) for _ in range (10)])        
+        ax.set_title('')
+        ax.set_xticks(index + .3)
+        ax.set_xticklabels(('Blues', 'Classical', 'Country', 'Disco', 'HipHop', 'Jazz', 'Metal', 'Pop', 'Reggae', 'Rock'))
+#        ax.legend(rec,('Blues', 'Classical', 'Country', 'Disco', 'HipHop', 'Jazz', 'Metal', 'Pop', 'Reggae', 'Rock'))
+        ax.set_xlabel('Genres')
+        ax.set_ylabel('Accuracy')        
+        self.autolabel(rec)        
+        plt.show()
+        
+    def loop_func(self, i):
+        numb = 0
+        for j in range(0,20):
+            numb = numb + 0.05
+            if np.arange(0,numb,i).any():
+                return numb
+                
+    def autolabel(self,rects):
+        for rect in rects:
+            height = rect.get_height()
+            plt.text(rect.get_x() + rect.get_width()/2., 1.05*height,
+                    '%0.2f' % float(height),
+                    ha='center', va='bottom')
 
 if __name__ == '__main__':
     import sys
