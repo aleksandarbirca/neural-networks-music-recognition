@@ -9,7 +9,6 @@ from pydub import AudioSegment
 from scikits.talkbox.features import mfcc
 import os
 from sklearn.preprocessing import scale
-import random
 import matplotlib.pyplot as plt
 
 class DialogWindow(QtGui.QWidget):
@@ -66,7 +65,7 @@ class DialogWindow(QtGui.QWidget):
         x = [row[0] for row in Y]
         self.draw_bar(x)
         
-     def draw_bar(x):
+    def draw_bar(self, x):
         n_genres = 10
         index = np.arange(n_genres)
         bar_width = 0.65
