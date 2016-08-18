@@ -33,11 +33,9 @@ def train_network():
     X, Y = read_mfcc()
     print '\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
     print '\nTraining network started\n'
-    X = scale( X, axis=0, with_mean=True, with_std=True, copy=True )
-    Y = scale( Y, axis=0, with_mean=True, with_std=True, copy=True )
+    X = scale( X, axis=1, with_mean=True, with_std=True, copy=True )
     #X = (X - np.min(X)) / (np.max(X) - np.min(X))
-    #Y = (Y - np.min(Y)) / (np.max(Y) - np.min(Y))
-    model.fit(X, Y, nb_epoch=10000, batch_size=128,  validation_data=(X, Y))
+    model.fit(X, Y, nb_epoch=5000, batch_size=128,  validation_data=(X, Y))
     model.save_weights('..\..\data\weights.h5', overwrite=True)
     score = model.evaluate(X, Y)
     print 'Network trained successfully and network weights saved as file weights.h5.'
@@ -47,7 +45,7 @@ def train_network():
 
 def read_mfcc():
     X = []
-    y = []
+    Y = []
     for label, genre in enumerate(GENRE_LIST):
         for file in glob.glob(os.path.join(DATASET_DIR, genre, "*.ceps.npy")):
             print 'Extracting MFCC from ' + file
@@ -56,8 +54,8 @@ def read_mfcc():
             X.append(np.mean(ceps[0:num_ceps], axis=0))
             g = np.zeros(10)
             g[label.real] = 1
-            y.append(g)
-    return np.array(X), np.array(y)
+            Y.append(g)
+    return np.array(X), np.array(Y)
 
 if __name__ == "__main__":
     compile_model()

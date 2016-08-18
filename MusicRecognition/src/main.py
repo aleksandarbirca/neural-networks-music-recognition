@@ -34,9 +34,9 @@ class DialogWindow(QtGui.QWidget):
         print 'Opened file ' + filename
 
         filename = str(filename)
-        song = AudioSegment.from_file(filename, "mp3")
+        song = AudioSegment.from_file(filename, "au")
         song = song[:30000]
-        wav_file = song.export(filename[:-3] + "wav", format='wav').name
+        wav_file = song.export(filename[:-2] + "wav", format='wav').name
         sample_rate, data = scipy.io.wavfile.read(wav_file)
         data[data == 0] = 1
         os.remove(wav_file)
@@ -44,11 +44,13 @@ class DialogWindow(QtGui.QWidget):
         num_ceps = len(ceps)
         X = []
         X.append(np.mean(ceps[0:num_ceps], axis=0))
-        X = scale(X, axis=0, with_mean=True, with_std=True, copy=True)
+        X = np.array(X)
+        X = scale(X, axis=1, with_mean=True, with_std=True, copy=True)
         model = model_from_json(open('..\data\weights\model.json','r').read())
         model.load_weights('..\data\weights\weights.h5')
 
-        Y = model.predict(np.array(X))
+        Y = model.predict(X)
+        self.textbox.clear()
         self.textbox.insertPlainText('Blues: ' + str(Y[0][0]))
         self.textbox.insertPlainText('\nClassical: ' + str(Y[0][1]))
         self.textbox.insertPlainText('\nCountry: ' + str(Y[0][2]))
