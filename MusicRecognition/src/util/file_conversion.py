@@ -21,7 +21,7 @@ def convert_dataset_to_wav():
         for file in files:
             path = subdir+'/'+file
             if path.endswith("au"):
-                print 'Converting' + path + ' to wav.'
+                print 'Converting: ' + path + ' to wav.'
                 song = AudioSegment.from_file(path,"au")
                 song = song[:30000]
                 song.export(path[:-2]+"wav",format='wav')
@@ -57,5 +57,5 @@ def extract_cepstrum(path):
 
 
 if __name__ == "__main__":
-    # convert_dataset_to_wav()
+    convert_dataset_to_wav()
     convert_wav_to_mfcc()

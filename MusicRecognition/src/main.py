@@ -30,9 +30,11 @@ class DialogWindow(QtGui.QWidget):
 
     def handleButton(self):
         # Get filename using QFileDialog
+        self.textbox.clear()
+        
         filename = QtGui.QFileDialog.getOpenFileName(self, 'Open File', '/')
         print 'Opened file ' + filename
-
+        
         filename = str(filename)
         song = AudioSegment.from_file(filename, "mp3")
         song = song[:30000]
@@ -45,11 +47,10 @@ class DialogWindow(QtGui.QWidget):
         X = []
         X.append(np.mean(ceps[0:num_ceps], axis=0))
         X = scale(X, axis=0, with_mean=True, with_std=True, copy=True)
-        model = model_from_json(open('..\data\weights\model.json','r').read())
+        model = model_from_json(open('..\data\weights\model.json', 'r').read())
         model.load_weights('..\data\weights\weights.h5')
 
         Y = model.predict(np.array(X))
-        self.textbox.clear()
         self.textbox.insertPlainText('Blues: ' + str(Y[0][0]))
         self.textbox.insertPlainText('\nClassical: ' + str(Y[0][1]))
         self.textbox.insertPlainText('\nCountry: ' + str(Y[0][2]))
@@ -60,7 +61,6 @@ class DialogWindow(QtGui.QWidget):
         self.textbox.insertPlainText('\nPop: ' + str(Y[0][7]))
         self.textbox.insertPlainText('\nReggae: ' + str(Y[0][8]))
         self.textbox.insertPlainText('\nRock: ' + str(Y[0][9]))
-        print Y
 
 if __name__ == '__main__':
     import sys
