@@ -37,26 +37,25 @@ class DialogWindow(QtGui.QWidget):
 
         if filename.endswith("au"):
             file_format = "au"
-            format_length = 2
+            format_length = 3
         elif filename.endswith("mp3"):
             file_format = "mp3"
-            format_length = 3
+            format_length = 4
         elif filename.endswith("wav"):
             file_format = "wav"
+            format_length = 4
         else:
             print "Format not supported."
             return
 
-        if (file_format != "wav"):
-            song = AudioSegment.from_file(filename, file_format)
-            song = song[:30000]
-            wav_file = song.export(filename[:-format_length] + "wav", format='wav').name
-        else:
-            wav_file = filename
+        song = AudioSegment.from_file(filename, file_format)
+        song = song[:30000]
+        wav_file = song.export(filename[:-format_length] + "_temp.wav", format='wav').name
         sample_rate, data = scipy.io.wavfile.read(wav_file)
         data[data == 0] = 1
-        if (file_format != "wav"):
-            os.remove(wav_file)
+        os.remove(wav_file)
+        print "Removed temporary file: " + wav_file
+
         ceps, mspec, spec = mfcc(data)
         num_ceps = len(ceps)
         X = []
