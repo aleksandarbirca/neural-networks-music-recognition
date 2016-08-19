@@ -13,6 +13,7 @@ DATASET_DIR = config["DATASET_DIR"]
 
 model = Sequential()
 
+
 def compile_model():
     sgd = SGD(lr=0.9, decay=1e-6, momentum=0.8, nesterov=True)
     model.add(Dense(13, input_dim=13))
@@ -29,15 +30,16 @@ def compile_model():
     open('..\..\data\model.json', 'w').write(json_model)
     print '\nNetwork created successfully and network model saved as file model.json.'
 
+
 def train_network():
-    X, Y = read_mfcc()
+    x, y = read_mfcc()
     print '\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~'
     print '\nTraining network started\n'
-    X = scale( X, axis=1, with_mean=True, with_std=True, copy=True )
+    x = scale(x, axis=1, with_mean=True, with_std=True, copy=True)
     #X = (X - np.min(X)) / (np.max(X) - np.min(X))
-    model.fit(X, Y, nb_epoch=5000, batch_size=128,  validation_data=(X, Y))
+    model.fit(x, y, nb_epoch=5000, batch_size=128,  validation_data=(x, y))
     model.save_weights('..\..\data\weights.h5', overwrite=True)
-    score = model.evaluate(X, Y)
+    score = model.evaluate(x, y)
     print 'Network trained successfully and network weights saved as file weights.h5.'
     print('Test score:', score[0])
     print('Test accuracy:', score[1])
