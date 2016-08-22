@@ -1,10 +1,11 @@
+import keras
 from keras.models import Sequential
-from keras.layers.core import Dense, Activation, Dropout
-from keras.layers import LSTM, Embedding
+from keras.layers.core import Dense, Activation, Dropout, Reshape, Flatten, TimeDistributedDense
+from keras.layers import LSTM, Embedding, GRU
 import os
 import glob
 import numpy as np
-from keras.optimizers import SGD
+from keras.optimizers import SGD, RMSprop
 from sklearn.preprocessing import scale
 
 config = {}
@@ -17,18 +18,14 @@ model = Sequential()
 
 
 def compile_model():
-    # sgd = SGD(lr=0.9, decay=1e-7, momentum=0.8, nesterov=True)
-    model.add(Embedding(100, 1000))
-    model.add(LSTM(128, return_sequences=True, input_shape=(30000, 13)))
-    model.add(Activation('tanh'))
-    model.add(LSTM(64))
-    model.add(Activation('tanh'))
-    # model.add(Dense(32))
-    # model.add(Activation('tanh'))
-    # model.add(Dropout(0.1))
+    model.add(LSTM(output_dim=50, input_dim=1, return_sequences=True))
+    model.add(Dropout(0.15))
+    model.add(LSTM(100, return_sequences=False))
+    model.add(Dropout(0.15))
     model.add(Dense(10))
     model.add(Activation('softmax'))
-    model.compile(loss='mse', optimizer='rmsprop', metrics=['accuracy'])
+    optimizer = RMSprop(lr=0.01, clipnorm=10)
+    model.compile(optimizer=optimizer, loss='mse', metrics=['accuracy'])
 
     json_model = model.to_json()
     open('..\..\data\model.json', 'w').write(json_model)
@@ -43,7 +40,15 @@ def train_network():
     # x = normalize_cepstrum_coefficients(x)
     x = scale(x, axis=1, with_mean=True, with_std=True, copy=True)
     x_test = scale(x_test, axis=1, with_mean=True, with_std=True, copy=True)
-    model.fit(x, y, nb_epoch=100, batch_size=128, validation_data=(x_test, y_test))
+
+    x_mean = x.mean()
+    x_test_mean = x_test.mean()
+    x -= x_mean
+    x_test -= x_test_mean
+    x = np.reshape(x, (x.shape[0], x.shape[1], 1))
+    x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1))
+
+    model.fit(x, y, nb_epoch=1000, batch_size=512, validation_data=(x_test, y_test))
     model.save_weights('..\..\data\weights.h5', overwrite=True)
     score = model.evaluate(x_test, y_test)
     print 'Network trained successfully and network weights saved as file weights.h5.'

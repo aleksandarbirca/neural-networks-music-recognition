@@ -1,3 +1,4 @@
+
 from keras.models import Sequential
 from keras.models import model_from_json
 import scipy.io.wavfile
@@ -9,6 +10,7 @@ from pydub import AudioSegment
 from scikits.talkbox.features import mfcc
 import os
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import scale
 
 
 def normalize_cepstrum_coefficients(x):
@@ -57,7 +59,7 @@ class DialogWindow(QtGui.QWidget):
             return
 
         song = AudioSegment.from_file(filename, file_format)
-        song = song[:30000]
+        # song = song[:30000]
         wav_file = song.export(filename[:-format_length] + "_temp.wav", format='wav').name
         sample_rate, data = scipy.io.wavfile.read(wav_file)
         data[data == 0] = 1
@@ -69,8 +71,13 @@ class DialogWindow(QtGui.QWidget):
 
         x = [np.mean(ceps[0:num_ceps], axis=0)]
         x = np.array(x)
-        x = normalize_cepstrum_coefficients(x)
-        # X = scale(X, axis=1, with_mean=True, with_std=True, copy=True)
+
+        x = scale(x, axis=1, with_mean=True, with_std=True, copy=True)
+        x_mean = x.mean()
+        x -= x_mean
+        x = np.reshape(x, (x.shape[0], x.shape[1], 1))
+        # x = normalize_cepstrum_coefficients(x)
+
         model = model_from_json(open('..\data\weights\model.json', 'r').read())
         model.load_weights('..\data\weights\weights.h5')
 
