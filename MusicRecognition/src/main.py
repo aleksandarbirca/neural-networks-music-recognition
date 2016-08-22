@@ -37,8 +37,6 @@ class DialogWindow(QtGui.QWidget):
         filename = QtGui.QFileDialog.getOpenFileName(self, 'Open File', '/')
         self.textbox.insertPlainText('Opened file ' + filename)
         print 'Opened file ' + filename
-        self.setFocus()
-
         filename = str(filename)
 
         if filename.endswith("au"):
@@ -62,7 +60,7 @@ class DialogWindow(QtGui.QWidget):
         signal[signal == 0] = 1
         os.remove(wav_file)
         self.textbox.insertPlainText("\nRemoved temporary file: " + wav_file)
-        print 'Removed temporary file: " + wav_file'
+        print 'Removed temporary file: ' + wav_file
 
         #TODO set sample rate depending on signal length and remove song = song[:30000]
         self.textbox.insertPlainText('\nExtracting MFCC from file.')
@@ -120,6 +118,7 @@ class DialogWindow(QtGui.QWidget):
                      '%f' % float(x[i]),
                      ha='center', va='bottom')
             i += 1
+
 
 def normalize_cepstrum_coefficients(x):
     x[:, 0] = x[:, 0] / 20
