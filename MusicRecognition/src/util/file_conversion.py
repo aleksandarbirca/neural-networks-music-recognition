@@ -22,9 +22,10 @@ def convert_dataset_to_wav():
             path = subdir+'/'+file
             if path.endswith("au"):
                 print 'Converting' + path + ' to wav.'
-                song = AudioSegment.from_file(path,"au")
+                song = AudioSegment.from_file(path, "au")
+                #TODO Remove
                 song = song[:30000]
-                song.export(path[:-2]+"wav",format='wav')
+                song.export(path[:-2]+"wav", format='wav')
 
     stop = timeit.default_timer()
     print "Files converted successfully."
@@ -39,7 +40,7 @@ def convert_wav_to_mfcc():
         for file in files:
             path = subdir+'/'+file
             if path.endswith("wav"):
-                extract_cepstrum(path) # Mel-frequency cepstrum (https://en.wikipedia.org/wiki/Mel-frequency_cepstrum)
+                extract_cepstrum(path)
 
     stop = timeit.default_timer()
     print "Files converted successfully."
@@ -47,9 +48,9 @@ def convert_wav_to_mfcc():
 
 
 def extract_cepstrum(path):
-    sample_rate, X = scipy.io.wavfile.read(path)
-    X[X == 0] = 1
-    ceps, mspec, spec = mfcc(X)
+    sample_rate, signal = scipy.io.wavfile.read(path)
+    signal[signal == 0] = 1
+    ceps, mspec, spec = mfcc(signal, sample_rate)
     base_fn, ext = os.path.splitext(path)
     data_fn = base_fn + ".ceps"
     np.save(data_fn, ceps)

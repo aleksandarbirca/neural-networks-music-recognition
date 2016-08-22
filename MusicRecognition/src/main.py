@@ -8,7 +8,6 @@ import numpy as np
 from pydub import AudioSegment
 from scikits.talkbox.features import mfcc
 import os
-from sklearn.preprocessing import scale
 import matplotlib.pyplot as plt
 
 
@@ -18,7 +17,9 @@ class DialogWindow(QtGui.QWidget):
     def __init__(self):
         QtGui.QWidget.__init__(self)
         self.resize(640, 240)
-        self.button = QtGui.QPushButton('Load .mp3 file', self)
+        self.setWindowTitle('Music Recognition')
+        self.button = QtGui.QPushButton('Load audio file', self)
+        self.button.setFixedWidth(100)
         self.button.clicked.connect(self.handle_button)
 
         # Create textbox
@@ -34,7 +35,9 @@ class DialogWindow(QtGui.QWidget):
         self.textbox.clear()
 
         filename = QtGui.QFileDialog.getOpenFileName(self, 'Open File', '/')
+        self.textbox.insertPlainText('Opened file ' + filename)
         print 'Opened file ' + filename
+        self.setFocus()
 
         filename = str(filename)
 
@@ -48,48 +51,44 @@ class DialogWindow(QtGui.QWidget):
             file_format = "wav"
             format_length = 4
         else:
-            print "Format not supported."
+            self.textbox.insertPlainText("\nFormat not supported.")
+            print 'Format not supported.'
             return
 
         song = AudioSegment.from_file(filename, file_format)
         song = song[:30000]
         wav_file = song.export(filename[:-format_length] + "_temp.wav", format='wav').name
-        sample_rate, data = scipy.io.wavfile.read(wav_file)
-        data[data == 0] = 1
+        sample_rate, signal = scipy.io.wavfile.read(wav_file)
+        signal[signal == 0] = 1
         os.remove(wav_file)
-        print "Removed temporary file: " + wav_file
+        self.textbox.insertPlainText("\nRemoved temporary file: " + wav_file)
+        print 'Removed temporary file: " + wav_file'
 
-        ceps, mspec, spec = mfcc(data)
+        #TODO set sample rate depending on signal length and remove song = song[:30000]
+        self.textbox.insertPlainText('\nExtracting MFCC from file.')
+        self.textbox.updatesEnabled()
+        ceps, mspec, spec = mfcc(signal)
         num_ceps = len(ceps)
-        X = []
-        X.append(np.mean(ceps[0:num_ceps], axis=0))
-        X = np.array(X)
-        X = scale(X, axis=1, with_mean=True, with_std=True, copy=True)
-        model = model_from_json(open('..\data\weights\model.json','r').read())
+        x = [np.mean(ceps[0:num_ceps], axis=0)]
+        x = np.array(x)
+        x = normalize_cepstrum_coefficients(x)
+        self.textbox.insertPlainText('\nLoading model and weights from ..\data\weights folder.')
+        print 'Loading model and weights from ..\data\weights folder.'
+        model = model_from_json(open('..\data\weights\model.json', 'r').read())
         model.load_weights('..\data\weights\weights.h5')
 
-        Y = model.predict(X)
-        self.textbox.clear()
-        self.textbox.insertPlainText('Blues: ' + str(Y[0][0]))
-        self.textbox.insertPlainText('\nClassical: ' + str(Y[0][1]))
-        self.textbox.insertPlainText('\nCountry: ' + str(Y[0][2]))
-        self.textbox.insertPlainText('\nDisco: ' + str(Y[0][3]))
-        self.textbox.insertPlainText('\nHipHop: ' + str(Y[0][4]))
-        self.textbox.insertPlainText('\nJazz: ' + str(Y[0][5]))
-        self.textbox.insertPlainText('\nMetal: ' + str(Y[0][6]))
-        self.textbox.insertPlainText('\nPop: ' + str(Y[0][7]))
-        self.textbox.insertPlainText('\nReggae: ' + str(Y[0][8]))
-        self.textbox.insertPlainText('\nRock: ' + str(Y[0][9]))
-        print Y
-        x = np.array(Y[0])
-        print x
+        self.textbox.insertPlainText('\nDeterminating genre.')
+        print 'Determinating genre.'
+        y = model.predict(x)
+        x = np.array(y[0])
         self.draw_bar(x)
+        self.textbox.insertPlainText('\nDone!')
+        print 'Done!'
 
     def draw_bar(self, x):
         n_genres = 10
         index = np.arange(n_genres)
         bar_width = 0.95
-        #        x=[random.uniform(0.1,1) for _ in range (10)]
         x_round = []
         fig, ax = plt.subplots()
         for i in x:
@@ -99,7 +98,6 @@ class DialogWindow(QtGui.QWidget):
         ax.set_xticks(index + .3)
         ax.set_xticklabels(
             ('Blues', 'Classical', 'Country', 'Disco', 'HipHop', 'Jazz', 'Metal', 'Pop', 'Reggae', 'Rock'))
-        # ax.legend(rec,('Blues', 'Classical', 'Country', 'Disco', 'HipHop', 'Jazz', 'Metal', 'Pop', 'Reggae', 'Rock'))
         ax.set_xlabel('Genres')
         ax.set_ylabel('Accuracy')
         self.autolabel(rec, x)
@@ -123,6 +121,10 @@ class DialogWindow(QtGui.QWidget):
                      ha='center', va='bottom')
             i += 1
 
+def normalize_cepstrum_coefficients(x):
+    x[:, 0] = x[:, 0] / 20
+    x[:, 1:13] = (x[:, 1:13] + 3) / 7
+    return x
 
 if __name__ == '__main__':
     import sys
