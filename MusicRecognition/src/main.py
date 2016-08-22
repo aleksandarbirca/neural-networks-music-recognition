@@ -8,8 +8,13 @@ import numpy as np
 from pydub import AudioSegment
 from scikits.talkbox.features import mfcc
 import os
-from sklearn.preprocessing import scale
 import matplotlib.pyplot as plt
+
+
+def normalize_cepstrum_coefficients(x):
+    x[:, 0] = x[:, 0] / 20
+    x[:, 1:13] = (x[:, 1:13] + 3) / 7
+    return x
 
 
 class DialogWindow(QtGui.QWidget):
@@ -37,33 +42,53 @@ class DialogWindow(QtGui.QWidget):
         print 'Opened file ' + filename
 
         filename = str(filename)
-        song = AudioSegment.from_file(filename, "mp3")
+
+        if filename.endswith("au"):
+            file_format = "au"
+            format_length = 3
+        elif filename.endswith("mp3"):
+            file_format = "mp3"
+            format_length = 4
+        elif filename.endswith("wav"):
+            file_format = "wav"
+            format_length = 4
+        else:
+            print "Format not supported."
+            return
+
+        song = AudioSegment.from_file(filename, file_format)
         song = song[:30000]
-        wav_file = song.export(filename[:-3] + "wav", format='wav').name
+        wav_file = song.export(filename[:-format_length] + "_temp.wav", format='wav').name
         sample_rate, data = scipy.io.wavfile.read(wav_file)
         data[data == 0] = 1
         os.remove(wav_file)
+        print "Removed temporary file: " + wav_file
+
         ceps, mspec, spec = mfcc(data)
         num_ceps = len(ceps)
-        X = [np.mean(ceps[0:num_ceps], axis=0)]
-        X = scale(X, axis=0, with_mean=True, with_std=True, copy=True)
+
+        x = [np.mean(ceps[0:num_ceps], axis=0)]
+        x = np.array(x)
+        x = normalize_cepstrum_coefficients(x)
+        # X = scale(X, axis=1, with_mean=True, with_std=True, copy=True)
         model = model_from_json(open('..\data\weights\model.json', 'r').read())
         model.load_weights('..\data\weights\weights.h5')
 
-        Y = model.predict(np.array(X))
-        self.textbox.insertPlainText('Blues: ' + str(Y[0][0]))
-        self.textbox.insertPlainText('\nClassical: ' + str(Y[0][1]))
-        self.textbox.insertPlainText('\nCountry: ' + str(Y[0][2]))
-        self.textbox.insertPlainText('\nDisco: ' + str(Y[0][3]))
-        self.textbox.insertPlainText('\nHipHop: ' + str(Y[0][4]))
-        self.textbox.insertPlainText('\nJazz: ' + str(Y[0][5]))
-        self.textbox.insertPlainText('\nMetal: ' + str(Y[0][6]))
-        self.textbox.insertPlainText('\nPop: ' + str(Y[0][7]))
-        self.textbox.insertPlainText('\nReggae: ' + str(Y[0][8]))
-        self.textbox.insertPlainText('\nRock: ' + str(Y[0][9]))
-        print Y
+        y = model.predict(x)
+        self.textbox.clear()
+        self.textbox.insertPlainText('Blues: ' + str(y[0][0]))
+        self.textbox.insertPlainText('\nClassical: ' + str(y[0][1]))
+        self.textbox.insertPlainText('\nCountry: ' + str(y[0][2]))
+        self.textbox.insertPlainText('\nDisco: ' + str(y[0][3]))
+        self.textbox.insertPlainText('\nHipHop: ' + str(y[0][4]))
+        self.textbox.insertPlainText('\nJazz: ' + str(y[0][5]))
+        self.textbox.insertPlainText('\nMetal: ' + str(y[0][6]))
+        self.textbox.insertPlainText('\nPop: ' + str(y[0][7]))
+        self.textbox.insertPlainText('\nReggae: ' + str(y[0][8]))
+        self.textbox.insertPlainText('\nRock: ' + str(y[0][9]))
+        print y
         # x = [row[0] for row in Y]
-        x = np.array(Y[0])
+        x = np.array(y[0])
         print x
         self.draw_bar(x)
 
