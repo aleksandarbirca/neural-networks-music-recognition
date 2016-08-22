@@ -23,7 +23,7 @@ def convert_dataset_to_wav():
             if path.endswith("au"):
                 print 'Converting: ' + path + ' to wav.'
                 song = AudioSegment.from_file(path, "au")
-                song = song[:30000]
+                # song = song[:300000]
                 song.export(path[:-2]+"wav", format='wav')
 
     stop = timeit.default_timer()
