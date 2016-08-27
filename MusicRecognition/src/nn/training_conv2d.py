@@ -4,7 +4,6 @@ import os
 import glob
 import numpy as np
 import theano
-#theano.config.optimizer = 'None'
 
 config = {}
 exec(open("..\..\config.cfg").read(), config)
@@ -13,20 +12,23 @@ DATASET_DIR = config["DATASET_DIR"]
 TEST_DIR = config["TEST_DIR"]
 
 
+theano.config.optimizer = 'None'
+
 model = Sequential()
 
-rows = 42
+rows = 42 # zavisi od semplovanja mfcc-a, za svali 100. je 42 (4133 mfcc-a u svakom fajlu posto je fajl 30 sekundi)
 columns = 13
 
 def compile_convolution2d_model():
 
-    model.add(Convolution2D(30, 1, 13, border_mode='same', input_shape=(1, rows, columns))) # 30 filtera, konvolucioni kernel 13*1 (rows 13 cols 1)
-    model.add(Activation('relu'))
-
-    model.add(Convolution2D(30, 1, 13, border_mode='same'))
+    # 30 filtera, konvolucioni kernel 13*1 (rows 13 cols 1),  ulaz 42x13x1 (svaki 100. ceps)
+    model.add(Convolution2D(30, 1, 13, border_mode='same', input_shape=(1, rows, columns)))
     model.add(Activation('relu'))
 
     model.add(Flatten())
+    model.add(Dense(150))
+    model.add(Activation('relu'))
+
     model.add(Dense(50))
     model.add(Activation('relu'))
 
@@ -46,6 +48,9 @@ def train_network():
     print ('\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
     print ('\nTraining network started\n')
 
+    x = x.reshape(x.shape[0], 1, rows, columns)
+    x_test = x_test.reshape(x_test.shape[0], 1, rows, columns)
+
     model.fit(x, y, nb_epoch=1000, batch_size=128, validation_data=(x_test, y_test))
     model.save_weights('..\..\data\weights.h5', overwrite=True)
     score = model.evaluate(x_test, y_test)
@@ -60,14 +65,14 @@ def read_mfcc(data_dir):
     for label, genre in enumerate(GENRE_LIST):
         for file in glob.glob(os.path.join(data_dir, genre, "*.ceps.npy")):
             print ('Extracting MFCC from ' + file)
-            ceps = np.load(file)
             temp_signal = []
+            ceps = np.load(file)
             temp_signal.extend(ceps[0::100])
-            x.append(temp_signal)
+            x.append(np.array(temp_signal))
             g = np.zeros(10)
             g[label.real] = 1
             y.append(g)
-    return x, np.array(y)
+    return np.array(x), np.array(y)
 
 
 if __name__ == "__main__":
