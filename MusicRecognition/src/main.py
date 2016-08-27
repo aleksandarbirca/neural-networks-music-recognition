@@ -9,6 +9,7 @@ from pydub import AudioSegment
 from scikits.talkbox.features import mfcc
 import os
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import scale
 
 
 class DialogWindow(QtGui.QWidget):
@@ -65,11 +66,17 @@ class DialogWindow(QtGui.QWidget):
         #TODO set sample rate depending on signal length and remove song = song[:30000]
         self.textbox.insertPlainText('\nExtracting MFCC from file.')
         self.textbox.updatesEnabled()
-        ceps, mspec, spec = mfcc(signal)
+        ceps, mspec, spec = mfcc(signal, nceps=13)
         num_ceps = len(ceps)
-        x = [np.mean(ceps[0:num_ceps], axis=0)]
+        temp_signal = []
+        temp_signal.extend(np.mean(ceps[0:num_ceps], axis=0))
+        temp_signal.extend(np.min(ceps[0:num_ceps], axis=0))
+        temp_signal.extend(np.max(ceps[0:num_ceps], axis=0))
+        x = [temp_signal]
         x = np.array(x)
-        x = normalize_cepstrum_coefficients(x)
+        x = scale(x, axis=1, with_mean=True, with_std=True, copy=True)
+
+        #x = normalize_cepstrum_coefficients(x)
         self.textbox.insertPlainText('\nLoading model and weights from ..\data\weights folder.')
         print 'Loading model and weights from ..\data\weights folder.'
         model = model_from_json(open('..\data\weights\model.json', 'r').read())
@@ -89,9 +96,9 @@ class DialogWindow(QtGui.QWidget):
         bar_width = 0.95
         x_round = []
         fig, ax = plt.subplots()
-        for i in x:
-            x_round.append(float("{0:.2f}".format(self.loop_func(i))))
-        rec = ax.bar(index, x_round, bar_width, color=[np.random.rand(3, 1) for _ in range(10)])
+        #for i in x:
+        #   x_round.append(float("{0:.2f}".format(self.loop_func(i))))
+        rec = ax.bar(index, x, bar_width, color=[np.random.rand(3, 1) for _ in range(10)])
         ax.set_title('')
         ax.set_xticks(index + .3)
         ax.set_xticklabels(
