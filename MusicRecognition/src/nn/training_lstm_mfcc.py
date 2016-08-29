@@ -19,9 +19,9 @@ num_of_mfcc = 100
 
 
 def compile_lstm_model():
-    model.add(LSTM(512, return_sequences=True,  input_shape=(num_of_mfcc, 13)))
+    model.add(LSTM(512, return_sequences=True, activation='tanh', input_shape=(num_of_mfcc, 13)))
     model.add(Dropout(0.1))
-    model.add(LSTM(512, return_sequences=False))
+    model.add(LSTM(512, activation='tanh', return_sequences=False))
     model.add(Dropout(0.1))
     model.add(Dense(10))
     model.add(Activation('softmax'))
@@ -42,7 +42,7 @@ def train_network():
 
     print ('\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
     print ('\nTraining network started\n')
-    model.fit(x, y, nb_epoch=1000, batch_size=128, validation_data=(x_test, y_test))
+    model.fit(x, y, nb_epoch=1000, batch_size=16, validation_data=(x_test, y_test))
     model.save_weights('..\..\data\weights.h5', overwrite=True)
     score = model.evaluate(x_test, y_test)
     print ('\nNetwork trained successfully and network weights saved as file weights.h5.')
@@ -56,15 +56,20 @@ def read_mfcc(data_dir):
     for label, genre in enumerate(GENRE_LIST):
         for file in glob.glob(os.path.join(data_dir, genre, "*.ceps.npy")):
             print ('Extracting MFCC from ' + file)
-            temp_signal = []
             ceps = np.load(file)
             ceps = ceps[0:num_of_mfcc]
-            temp_signal.extend(ceps)
-            x.append(np.array(temp_signal))
+            normalize_cepstrum_coefficients(ceps)
+            x.append(np.array(ceps))
             g = np.zeros(10)
             g[label.real] = 1
             y.append(g)
     return np.array(x), np.array(y)
+
+
+def normalize_cepstrum_coefficients(x):
+    x[:, 0] = x[:, 0] / 20
+    x[:, 1:13] = x[:, 1:13] / 3
+    return x
 
 if __name__ == "__main__":
     compile_lstm_model()
