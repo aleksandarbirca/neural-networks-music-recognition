@@ -1,5 +1,5 @@
 from keras.models import Sequential
-from keras.layers import Dense, Activation, Flatten, Convolution2D
+from keras.layers import Dense, Activation, Flatten, Convolution2D, Dropout
 import os
 import glob
 import numpy as np
@@ -16,21 +16,27 @@ theano.config.optimizer = 'None'
 
 model = Sequential()
 
-rows = 42 # zavisi od semplovanja mfcc-a, za svali 100. je 42 (4133 mfcc-a u svakom fajlu posto je fajl 30 sekundi)
+rows = 42 # zavisi od semplovanja mfcc-a, za svaki 100. je 42 (4133 mfcc-a u svakom fajlu posto je fajl 30 sekundi)
 columns = 13
+
 
 def compile_convolution2d_model():
 
-    # 30 filtera, konvolucioni kernel 13*1 (rows 13 cols 1),  ulaz 42x13x1 (svaki 100. ceps)
-    model.add(Convolution2D(30, 1, 13, border_mode='same', input_shape=(1, rows, columns)))
-    model.add(Activation('relu'))
+    # 30 filtera, konvolucioni kernel 13*1 (rows 1 cols 13),  ulaz 42x13x1 (svaki 100. ceps)
+    model.add(Convolution2D(3, 10, 13, border_mode='same', input_shape=(1, rows, columns)))
+    model.add(Activation('tanh'))
 
+    model.add(Convolution2D(15, 10, 13, border_mode='same'))
+    model.add(Activation('tanh'))
+
+    model.add(Convolution2D(65, 10, 13, border_mode='same'))
+    model.add(Activation('tanh'))
+
+    model.add(Dropout(0.1))
     model.add(Flatten())
-    model.add(Dense(150))
-    model.add(Activation('relu'))
-
     model.add(Dense(50))
-    model.add(Activation('relu'))
+    model.add(Activation('tanh'))
+    model.add(Dropout(0.1))
 
     model.add(Dense(10))
     model.add(Activation('softmax'))
@@ -48,7 +54,7 @@ def train_network():
     print ('\n\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~')
     print ('\nTraining network started\n')
 
-    x = x.reshape(x.shape[0], 1, rows, columns)
+    x = x.reshape(x.shape[0], 1, rows, columns) # (800 samples x 1 channel x rows x columns)
     x_test = x_test.reshape(x_test.shape[0], 1, rows, columns)
 
     model.fit(x, y, nb_epoch=1000, batch_size=128, validation_data=(x_test, y_test))
@@ -67,7 +73,8 @@ def read_mfcc(data_dir):
             print ('Extracting MFCC from ' + file)
             temp_signal = []
             ceps = np.load(file)
-            temp_signal.extend(ceps[0::100])
+            ceps = ceps[0:100]
+            temp_signal.extend(ceps)
             x.append(np.array(temp_signal))
             g = np.zeros(10)
             g[label.real] = 1
