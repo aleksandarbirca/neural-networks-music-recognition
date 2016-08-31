@@ -70,8 +70,8 @@ class DialogWindow(QtGui.QWidget):
         num_ceps = len(ceps)
         temp_signal = []
         temp_signal.extend(np.mean(ceps[0:num_ceps], axis=0))
-        temp_signal.extend(np.min(ceps[0:num_ceps], axis=0))
-        temp_signal.extend(np.max(ceps[0:num_ceps], axis=0))
+        #temp_signal.extend(np.min(ceps[0:num_ceps], axis=0))
+        #temp_signal.extend(np.max(ceps[0:num_ceps], axis=0))
         x = [temp_signal]
         x = np.array(x)
         x = scale(x, axis=1, with_mean=True, with_std=True, copy=True)
@@ -79,8 +79,8 @@ class DialogWindow(QtGui.QWidget):
         #x = normalize_cepstrum_coefficients(x)
         self.textbox.insertPlainText('\nLoading model and weights from ..\data\weights folder.')
         print 'Loading model and weights from ..\data\weights folder.'
-        model = model_from_json(open('..\data\weights\model.json', 'r').read())
-        model.load_weights('..\data\weights\weights.h5')
+        model = model_from_json(open('..\data\weights_ui\model.json', 'r').read())
+        model.load_weights('..\data\weights_ui\weights.h5')
 
         self.textbox.insertPlainText('\nDeterminating genre.')
         print 'Determinating genre.'
