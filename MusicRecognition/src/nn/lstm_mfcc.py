@@ -22,7 +22,7 @@ num_of_mfcc = 40
 num_of_ceps = 13 * 4
 
 # Number of training epochs.
-nb_epochs = 100
+nb_epochs = 1000
 
 # Training batch size.
 batch_size = 16
@@ -30,14 +30,17 @@ batch_size = 16
 # Learning rate.
 lr = 0.0001
 
+# Load weights from last checkpoint
+load_weights = False
+
 model = Sequential()
 
 
 def compile_lstm_model():
     model.add(LSTM(512, return_sequences=True, input_shape=(num_of_mfcc, num_of_ceps)))
-    model.add(Dropout(0.3))
+    model.add(Dropout(0.6))
     model.add(LSTM(512, return_sequences=False))
-    model.add(Dropout(0.3))
+    model.add(Dropout(0.6))
     model.add(Dense(10))
     model.add(Activation('softmax'))
     optimizer = RMSprop(lr=lr)
@@ -62,6 +65,8 @@ def train_network():
     print ('\nNetwork training started\n')
     checkpointer = ModelCheckpoint(filepath="..\..\data\weights_checkpoint\weights_lstm_best_acc.hdf5",verbose=1,
                                    save_best_only=True, monitor='val_acc', mode='auto')
+    if load_weights:
+        model.load_weights('..\..\data\weights_checkpoint\weights_lstm_best_acc.hdf5')
     model.fit(x, y, nb_epoch=nb_epochs, batch_size=batch_size, validation_data=(x_test, y_test),
               callbacks=[checkpointer])
     model.save_weights('..\..\data\weights_lstm_mfcc.h5', overwrite=True)
@@ -74,6 +79,7 @@ def train_network():
 def read_mfcc(data_dir):
     x = []
     y = []
+    sampling_step = 100
     for label, genre in enumerate(GENRES_ALL):
         if genre not in GENRES:
             continue
@@ -81,14 +87,13 @@ def read_mfcc(data_dir):
             print ('Extracting MFCC from ' + file)
             ceps = np.load(file)
             sampled_ceps = []
-            for i in range(0, len(ceps)/100):
+            for i in range(0, len(ceps)/sampling_step):
                 temp_ceps = []
-                temp_ceps.extend(np.mean(ceps[i*100:i*100+100], axis=0))
-                temp_ceps.extend(np.min(ceps[i*100:i*100+100], axis=0))
-                temp_ceps.extend(np.max(ceps[i*100:i*100+100], axis=0))
-                temp_ceps.extend(np.var(ceps[i*100:i*100+100], axis=0))
+                temp_ceps.extend(np.mean(ceps[i*sampling_step:i*sampling_step+sampling_step], axis=0))
+                temp_ceps.extend(np.min(ceps[i*sampling_step:i*sampling_step+sampling_step], axis=0))
+                temp_ceps.extend(np.max(ceps[i*sampling_step:i*sampling_step+sampling_step], axis=0))
+                temp_ceps.extend(np.var(ceps[i*sampling_step:i*sampling_step+sampling_step], axis=0))
                 sampled_ceps.append(temp_ceps)
-
             sampled_ceps = sampled_ceps[0:num_of_mfcc]
             x.append(np.array(sampled_ceps))
             # TODO Use np_utils.to_categorical

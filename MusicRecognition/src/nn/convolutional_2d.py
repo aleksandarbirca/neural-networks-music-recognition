@@ -20,16 +20,16 @@ TEST_DIR = config["TEST_DIR"]
 
 
 # Number of MFCC samples.
-rows = 40
+rows = 80
 
 # Number of coefficients in each sample.
 columns = 13
 
 # Convolutional kernel width.
-kernel_width = 10
+kernel_width = 5
 
-# Number of training epoch.
-nb_epochs = 100
+# Number of training epochs.
+nb_epochs = 1000
 
 # Training batch size.
 batch_size = 64
@@ -89,6 +89,7 @@ def train_network():
 def read_mfcc(data_dir):
     x = []
     y = []
+    sampling_step = 50
     for label, genre in enumerate(GENRES_ALL):
         if genre not in GENRES:
             continue
@@ -96,9 +97,9 @@ def read_mfcc(data_dir):
             print ('Extracting MFCC from ' + file)
             ceps = np.load(file)
             sampled_ceps = []
-            for i in range(0, len(ceps)/100):
+            for i in range(0, len(ceps)/sampling_step):
                 temp_ceps = []
-                temp_ceps.extend(np.mean(ceps[i*100:i*100+100], axis=0))
+                temp_ceps.extend(np.mean(ceps[i*sampling_step:i*sampling_step+sampling_step], axis=0))
                 sampled_ceps.append(temp_ceps)
 
             sampled_ceps = sampled_ceps[0:rows]

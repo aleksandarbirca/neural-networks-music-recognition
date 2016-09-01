@@ -4,13 +4,14 @@ from scipy.io import wavfile
 import numpy as np
 import timeit
 import os
+import matplotlib.pyplot as plt
 
 config = {}
 execfile("..\..\config.cfg", config)
 
 DATASET_DIR = config["DATASET_DIR"]
 TEST_DIR = config["TEST_DIR"]
-GENRE_LIST = config["GENRE_LIST"]
+GENRES = config["GENRES_ALL"]
 
 # Convert original audio files from dataset to WAV format
 convert_to_wav = False
@@ -18,8 +19,11 @@ convert_to_wav = False
 # Extract MFCC (Mel Frequency Cepstral Coefficients) from audio files and save them as .ceps files
 extract_mfcc = True
 
-#Number of MFCC (13-40)
+# Number of MFCC (13-40)
 mfcc_num = 13
+
+# Save spectrogram image
+save_spectrogram_image = True
 
 
 def convert_dataset_to_wav(data_dir):
@@ -54,6 +58,10 @@ def convert_wav_to_mfcc(data_dir, ceps_num):
 
 def extract_cepstrum(path, ceps_num):
     sample_rate, signal = wavfile.read(path)
+    if save_spectrogram_image:
+        plt.specgram(signal)
+        plt.savefig(path[:-3]+"png")
+        plt.close()
     signal[signal == 0] = 1
     ceps, mspec, spec = mfcc(signal, nceps=ceps_num)
     base, ext = os.path.splitext(path)
@@ -68,4 +76,4 @@ if __name__ == "__main__":
         convert_dataset_to_wav(TEST_DIR)
     if extract_mfcc:
         convert_wav_to_mfcc(DATASET_DIR, mfcc_num)
-        convert_wav_to_mfcc(TEST_DIR, mfcc_num)
+        #convert_wav_to_mfcc(TEST_DIR, mfcc_num)
